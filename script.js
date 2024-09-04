@@ -120,6 +120,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 taskDiv.setAttribute('data-deadline', date);
                 taskDiv.setAttribute('draggable', 'true');
                 taskDiv.innerHTML = `<strong>${task.title}</strong><p>${task.description}</p>`;
+
+                taskDiv.style.backgroundColor = taskDiv.getAttribute('data-priority') == 'Alta'
+                    ? '#ffcccc'
+                    : taskDiv.getAttribute('data-priority') == 'Media'
+                    ? '#ffffab'
+                    : '#ddffdd';
     
                 const column = document.getElementById(task.status.toLowerCase().replace(' ', '-'));
                 if (column) {
