@@ -85,6 +85,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function deleteTaskFromServer(task, taskDiv) {
+        try {
+            await fetch(`http://localhost:3000/api/tasks/${taskDiv.getAttribute('data-id')}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            await showTasksInColumns();
+        } catch(error) {
+            console.log(error);
+        }
+    }
+
     async function showTasksInColumns() {
         try {
             clearAllColumns();
@@ -102,7 +116,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? 'Media' 
                     : 'Baja');
                 taskDiv.setAttribute('data-status', task.status.toLowerCase().replace(' ', '-'));
-                taskDiv.setAttribute('data-deadline', task.endDate);
+                let date = task.endDate.includes('/') ? task.endDate.split('/').reverse().join('-') : task.endDate;
+                taskDiv.setAttribute('data-deadline', date);
                 taskDiv.setAttribute('draggable', 'true');
                 taskDiv.innerHTML = `<strong>${task.title}</strong><p>${task.description}</p>`;
     
@@ -116,7 +131,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
                     taskDiv.addEventListener('dragend', () => {
                         taskDiv.classList.remove('is-dragging');
-                        saveTasks();
                     });
     
                     taskDiv.addEventListener('click', () => openEditModal(taskDiv));
@@ -128,8 +142,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }        
     
     showTasksInColumns();
-
-    // loadTasks();
 
     newTaskButton.addEventListener('click', () => {
         clearForm();
@@ -182,12 +194,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         taskDiv.addEventListener('dragend', () => {
             taskDiv.classList.remove('is-dragging');
-            saveTasks();
         });
 
         taskDiv.addEventListener('click', () => openEditModal(taskDiv));
 
-        saveTasks();
         closeModal();
     });
 
@@ -278,7 +288,6 @@ document.addEventListener('DOMContentLoaded', () => {
             column.querySelector('.task-list-content').appendChild(currentTaskDiv);
         }
 
-        saveTasks();
         closeEditModal();
     });
 
@@ -288,8 +297,8 @@ document.addEventListener('DOMContentLoaded', () => {
     })
 
     siEliminar.addEventListener('click', () => {
-        currentTaskDiv.remove();
-        saveTasks();
+        let taskJson = jsonifyTask(currentTaskDiv);
+        deleteTaskFromServer(taskJson, currentTaskDiv);
         closeConfirmModal();
     })
 
@@ -304,24 +313,5 @@ document.addEventListener('DOMContentLoaded', () => {
         taskPriority.selectedIndex = 0;
         taskStatus.selectedIndex = 0;
         taskDeadline.value = '';
-    }
-
-    function saveTasks() {
-        const tasks = [];
-        columns.forEach(column => {
-            const taskDivs = column.querySelectorAll('.box');
-            taskDivs.forEach(taskDiv => {
-                tasks.push({
-                    title: taskDiv.getAttribute('data-title'),
-                    description: taskDiv.getAttribute('data-description'),
-                    assigned: taskDiv.getAttribute('data-assigned'),
-                    priority: taskDiv.getAttribute('data-priority'),
-                    status: taskDiv.getAttribute('data-status'),
-                    deadline: taskDiv.getAttribute('data-deadline'),
-                    columnId: column.id 
-                });
-            });
-        });
-        localStorage.setItem('tasks', JSON.stringify(tasks));
     }
 });
